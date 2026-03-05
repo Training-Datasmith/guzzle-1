@@ -134,7 +134,7 @@ var GuzzleServer = function(port, log) {
       if (that.log) {
         console.log('returning bad status code')
       }
-      res.writeHead(700, 'BAD', {'Content-Length': 16});
+      res.writeHead(1000, 'BAD', {'Content-Length': 16});
       res.end('Body of response');
     } else if (req.url == '/guzzle-server/perf') {
       res.writeHead(200, 'OK', {'Content-Length': 16});

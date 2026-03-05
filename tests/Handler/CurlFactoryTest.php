@@ -744,7 +744,7 @@ class CurlFactoryTest extends TestCase
     public function testRejectsPromiseWhenCreateResponseFails()
     {
         Server::flush();
-        Server::enqueueRaw(999, 'Incorrect', ['X-Foo' => 'bar'], 'abc 123');
+        Server::enqueueRaw(1000, 'Incorrect', ['X-Foo' => 'bar'], 'abc 123');
 
         $req = new Psr7\Request('GET', Server::$url);
         $handler = new Handler\CurlHandler();

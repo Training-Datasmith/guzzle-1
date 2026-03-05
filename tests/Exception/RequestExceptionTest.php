@@ -2,6 +2,7 @@
 
 namespace GuzzleHttp\Tests\Exception;
 
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ServerException;
@@ -79,12 +80,14 @@ class RequestExceptionTest extends TestCase
         self::assertInstanceOf(RequestException::class, $e);
     }
 
-    public function testThrowsInvalidArgumentExceptionOnOutOfBoundsResponseCode()
+    public function testCreatesBadResponseExceptionForExtendedStatusCodes()
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Status code must be an integer value between 1xx and 5xx.');
+        $e = RequestException::create(new Request('GET', '/'), new Response(600));
 
-        throw RequestException::create(new Request('GET', '/'), new Response(600));
+        self::assertInstanceOf(BadResponseException::class, $e);
+        self::assertNotInstanceOf(ClientException::class, $e);
+        self::assertNotInstanceOf(ServerException::class, $e);
+        self::assertStringContainsString('600', $e->getMessage());
     }
 
     public static function dataPrintableResponses()

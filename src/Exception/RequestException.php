@@ -86,7 +86,7 @@ class RequestException extends TransferException implements RequestExceptionInte
             $className = ServerException::class;
         } else {
             $label = 'Unsuccessful request';
-            $className = __CLASS__;
+            $className = BadResponseException::class;
         }
 
         $uri = \GuzzleHttp\Psr7\Utils::redactUserInfo($request->getUri());
