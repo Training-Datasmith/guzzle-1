@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace GuzzleHttp\Cookie;
 
 use Psr\Http\Message\RequestInterface;
@@ -125,8 +127,7 @@ class CookieJar implements CookieJarInterface
                         && $cookie->matchesDomain($domain));
                 }
             );
-        }
-        else {
+        } else {
             $this->cookies = \array_filter(
                 $this->cookies,
                 static function (SetCookie $cookie) use ($path, $domain, $name): bool {
