@@ -152,7 +152,7 @@ class StreamHandler
             $this->drain($stream, $sink, $response->getHeaderLine('Content-Length'));
         }
 
-        $this->invokeStats($options, $request, $startTime, $response, null);
+        $this->invokeStats($options, $request, $startTime, $response);
 
         return new FulfilledPromise($response);
     }
@@ -276,7 +276,7 @@ class StreamHandler
     {
         static $methods;
         if (!$methods) {
-            $methods = \array_flip(\get_class_methods(__CLASS__));
+            $methods = \array_flip(\get_class_methods(self::class));
         }
 
         if (!\in_array($request->getUri()->getScheme(), ['http', 'https'])) {
@@ -303,12 +303,10 @@ class StreamHandler
             throw new \InvalidArgumentException('on_headers must be callable');
         }
 
-        if (!empty($options)) {
-            foreach ($options as $key => $value) {
-                $method = "add_{$key}";
-                if (isset($methods[$method])) {
-                    $this->{$method}($request, $context, $value, $params);
-                }
+        foreach ($options as $key => $value) {
+            $method = "add_{$key}";
+            if (isset($methods[$method])) {
+                $this->{$method}($request, $context, $value, $params);
             }
         }
 
@@ -426,7 +424,7 @@ class StreamHandler
     /**
      * @param mixed $value as passed via Request transfer options.
      */
-    private function add_proxy(RequestInterface $request, array &$options, $value, array &$params): void
+    private function add_proxy(RequestInterface $request, array &$options, $value): void
     {
         $uri = null;
 
@@ -487,7 +485,7 @@ class StreamHandler
     /**
      * @param mixed $value as passed via Request transfer options.
      */
-    private function add_timeout(RequestInterface $request, array &$options, $value, array &$params): void
+    private function add_timeout(array &$options, $value): void
     {
         if ($value > 0) {
             $options['http']['timeout'] = $value;
@@ -497,7 +495,7 @@ class StreamHandler
     /**
      * @param mixed $value as passed via Request transfer options.
      */
-    private function add_crypto_method(RequestInterface $request, array &$options, $value, array &$params): void
+    private function add_crypto_method(array &$options, $value): void
     {
         if (
             $value === \STREAM_CRYPTO_METHOD_TLSv1_0_CLIENT
@@ -516,7 +514,7 @@ class StreamHandler
     /**
      * @param mixed $value as passed via Request transfer options.
      */
-    private function add_verify(RequestInterface $request, array &$options, $value, array &$params): void
+    private function add_verify(array &$options, $value): void
     {
         if ($value === false) {
             $options['ssl']['verify_peer'] = false;
@@ -542,7 +540,7 @@ class StreamHandler
     /**
      * @param mixed $value as passed via Request transfer options.
      */
-    private function add_cert(RequestInterface $request, array &$options, $value, array &$params): void
+    private function add_cert(array &$options, $value): void
     {
         if (\is_array($value)) {
             $options['ssl']['passphrase'] = $value[1];
@@ -559,11 +557,11 @@ class StreamHandler
     /**
      * @param mixed $value as passed via Request transfer options.
      */
-    private function add_progress(RequestInterface $request, array &$options, $value, array &$params): void
+    private function add_progress($value, array &$params): void
     {
         self::addNotification(
             $params,
-            static function ($code, $a, $b, $c, $transferred, $total) use ($value) {
+            static function ($code, $a, $b, $c, $transferred, $total) use ($value): void {
                 if ($code == \STREAM_NOTIFY_PROGRESS) {
                     // The upload progress cannot be determined. Use 0 for cURL compatibility:
                     // https://curl.se/libcurl/c/CURLOPT_PROGRESSFUNCTION.html
@@ -576,7 +574,7 @@ class StreamHandler
     /**
      * @param mixed $value as passed via Request transfer options.
      */
-    private function add_debug(RequestInterface $request, array &$options, $value, array &$params): void
+    private function add_debug(RequestInterface $request, $value, array &$params): void
     {
         if ($value === false) {
             return;
@@ -625,7 +623,7 @@ class StreamHandler
 
     private static function callArray(array $functions): callable
     {
-        return static function (...$args) use ($functions) {
+        return static function (...$args) use ($functions): void {
             foreach ($functions as $fn) {
                 $fn(...$args);
             }

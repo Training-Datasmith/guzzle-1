@@ -77,10 +77,8 @@ class HandlerStack
 
     /**
      * Dumps a string representation of the stack.
-     *
-     * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         $depth = 0;
         $stack = [];
@@ -181,14 +179,14 @@ class HandlerStack
     public function remove($remove): void
     {
         if (!is_string($remove) && !is_callable($remove)) {
-            trigger_deprecation('guzzlehttp/guzzle', '7.4', 'Not passing a callable or string to %s::%s() is deprecated and will cause an error in 8.0.', __CLASS__, __FUNCTION__);
+            trigger_deprecation('guzzlehttp/guzzle', '7.4', 'Not passing a callable or string to %s::%s() is deprecated and will cause an error in 8.0.', self::class, __FUNCTION__);
         }
 
         $this->cached = null;
         $idx = \is_callable($remove) ? 0 : 1;
         $this->stack = \array_values(\array_filter(
             $this->stack,
-            static function ($tuple) use ($idx, $remove) {
+            static function (array $tuple) use ($idx, $remove): bool {
                 return $tuple[$idx] !== $remove;
             }
         ));

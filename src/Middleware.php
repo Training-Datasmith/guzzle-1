@@ -29,7 +29,8 @@ final class Middleware
             return static function ($request, array $options) use ($handler) {
                 if (empty($options['cookies'])) {
                     return $handler($request, $options);
-                } elseif (!$options['cookies'] instanceof CookieJarInterface) {
+                }
+                if (!$options['cookies'] instanceof CookieJarInterface) {
                     throw new \InvalidArgumentException('cookies must be an instance of GuzzleHttp\Cookie\CookieJarInterface');
                 }
                 $cookieJar = $options['cookies'];
@@ -64,7 +65,7 @@ final class Middleware
                 }
 
                 return $handler($request, $options)->then(
-                    static function (ResponseInterface $response) use ($request, $bodySummarizer) {
+                    static function (ResponseInterface $response) use ($request, $bodySummarizer): \Psr\Http\Message\ResponseInterface {
                         $code = $response->getStatusCode();
                         if ($code < 400) {
                             return $response;
@@ -205,7 +206,7 @@ final class Middleware
         return static function (callable $handler) use ($logger, $formatter, $logLevel): callable {
             return static function (RequestInterface $request, array $options = []) use ($handler, $logger, $formatter, $logLevel) {
                 return $handler($request, $options)->then(
-                    static function ($response) use ($logger, $request, $formatter, $logLevel): ResponseInterface {
+                    static function (?\Psr\Http\Message\ResponseInterface $response) use ($logger, $request, $formatter, $logLevel): ResponseInterface {
                         $message = $formatter->format($request, $response);
                         $logger->log($logLevel, $message);
 

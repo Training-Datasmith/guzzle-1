@@ -71,14 +71,12 @@ class Client implements ClientInterface, \Psr\Http\Client\ClientInterface
     }
 
     /**
-     * @param string $method
      * @param array  $args
      *
      * @return PromiseInterface|ResponseInterface
-     *
      * @deprecated Client::__call will be removed in guzzlehttp/guzzle:8.0.
      */
-    public function __call($method, $args)
+    public function __call(string $method, array $args)
     {
         if (\count($args) < 1) {
             throw new InvalidArgumentException('Magic request methods require a URI and optional options array');

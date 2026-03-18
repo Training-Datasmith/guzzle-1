@@ -87,14 +87,13 @@ class CurlMultiHandler
     }
 
     /**
-     * @param string $name
      *
      * @return resource|\CurlMultiHandle
      *
      * @throws \BadMethodCallException when another field as `_mh` will be gotten
      * @throws \RuntimeException       when curl can not initialize a multi handle
      */
-    public function __get($name)
+    public function __get(string $name)
     {
         if ($name !== '_mh') {
             throw new \BadMethodCallException("Can not get other property as '_mh'.");
@@ -131,7 +130,7 @@ class CurlMultiHandler
 
         $promise = new Promise(
             [$this, 'execute'],
-            function () use ($id) {
+            function () use ($id): bool {
                 return $this->cancel($id);
             }
         );
@@ -226,10 +225,10 @@ class CurlMultiHandler
      *
      * @return bool True on success, false on failure.
      */
-    private function cancel($id): bool
+    private function cancel(int $id): bool
     {
         if (!is_int($id)) {
-            trigger_deprecation('guzzlehttp/guzzle', '7.4', 'Not passing an integer to %s::%s() is deprecated and will cause an error in 8.0.', __CLASS__, __FUNCTION__);
+            trigger_deprecation('guzzlehttp/guzzle', '7.4', 'Not passing an integer to %s::%s() is deprecated and will cause an error in 8.0.', self::class, __FUNCTION__);
         }
 
         // Cannot cancel if it has been processed.

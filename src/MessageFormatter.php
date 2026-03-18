@@ -133,6 +133,7 @@ class MessageFormatter implements MessageFormatterInterface
                         $result = $request->getMethod();
                         break;
                     case 'version':
+                    case 'req_version':
                         $result = $request->getProtocolVersion();
                         break;
                     case 'uri':
@@ -141,9 +142,6 @@ class MessageFormatter implements MessageFormatterInterface
                         break;
                     case 'target':
                         $result = $request->getRequestTarget();
-                        break;
-                    case 'req_version':
-                        $result = $request->getProtocolVersion();
                         break;
                     case 'res_version':
                         $result = $response

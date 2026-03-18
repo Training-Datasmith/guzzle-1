@@ -112,7 +112,7 @@ class MockHandler implements \Countable
             : P\Create::promiseFor($response);
 
         return $response->then(
-            function (?ResponseInterface $value) use ($request, $options) {
+            function (?ResponseInterface $value) use ($request, $options): ?\Psr\Http\Message\ResponseInterface {
                 $this->invokeStats($request, $options, $value);
                 if ($this->onFulfilled) {
                     ($this->onFulfilled)($value);

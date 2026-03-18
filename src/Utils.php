@@ -298,7 +298,6 @@ EOT
             throw new InvalidArgumentException('json_encode error: '.\json_last_error_msg());
         }
 
-        /** @var string */
         return $json;
     }
 
