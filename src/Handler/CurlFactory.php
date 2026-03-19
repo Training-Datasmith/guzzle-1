@@ -199,6 +199,18 @@ class CurlFactory implements CurlFactoryInterface
             'appconnect_time' => \curl_getinfo($easy->handle, \CURLINFO_APPCONNECT_TIME),
         ] + \curl_getinfo($easy->handle);
         $ctx[self::CURL_VERSION_STR] = self::getCurlVersion();
+
+        // Redact credentials from effective_url to prevent leaking them via
+        // exception context (curl_getinfo includes the resolved URL verbatim).
+        if (isset($ctx['effective_url']) && is_string($ctx['effective_url'])) {
+            $parsed = \parse_url($ctx['effective_url']);
+            if ($parsed !== false && (isset($parsed['user']) || isset($parsed['pass']))) {
+                $ctx['effective_url'] = \GuzzleHttp\Psr7\Utils::redactUserInfo(
+                    new \GuzzleHttp\Psr7\Uri($ctx['effective_url'])
+                )->__toString();
+            }
+        }
+
         $factory->release($easy);
 
         // Retry when nothing is present or when curl failed to rewind.

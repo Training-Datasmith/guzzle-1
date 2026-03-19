@@ -429,8 +429,14 @@ class SetCookie
 
         $domain = \strtolower($domain);
 
-        // Domain not set or exact match.
-        if ('' === $cookieDomain || $domain === $cookieDomain) {
+        // Reject cookies whose domain reduces to empty string after dot-stripping
+        // (e.g. Domain=.), as they would match all hosts.
+        if ('' === $cookieDomain) {
+            return false;
+        }
+
+        // Exact match.
+        if ($domain === $cookieDomain) {
             return true;
         }
 
