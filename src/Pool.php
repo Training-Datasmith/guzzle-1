@@ -28,14 +28,25 @@ class Pool implements Promisor_Interface
      */
     private $each;
     /**
-     * @param ClientInterface $client   Client used to send the requests.
-     * @param array|\Iterator $requests Requests or functions that return
-     *                                  requests to send concurrently.
-     * @param array           $config   Associative array of options
-     *                                  - concurrency: (int) Maximum number of requests to send concurrently
-     *                                  - options: Array of request options to apply to each request.
-     *                                  - fulfilled: (callable) Function to invoke when a request completes.
-     *                                  - rejected: (callable) Function to invoke when a request is rejected.
+     * Creates a new concurrent request pool.
+     *
+     * Requests in the pool are dispatched asynchronously up to the configured
+     * concurrency limit. As each request completes, the next pending request
+     * is dispatched until the iterator is exhausted.
+     *
+     * @param Client_Interface              $client   The HTTP client used to dispatch requests.
+     * @param iterable<Request_Interface|callable> $requests
+     *     An iterable of:
+     *     - `RequestInterface` objects, or
+     *     - callables that receive merged options and return `PromiseInterface`
+     * @param array<string, mixed>          $config   Pool configuration:
+     *     - `concurrency`  (int, default 25)  Maximum number of in-flight requests.
+     *     - `options`      (array)             Request options merged into every request.
+     *     - `fulfilled`    (callable)          Invoked with `(ResponseInterface, key)` on success.
+     *     - `rejected`     (callable)          Invoked with `(Throwable, key)` on failure.
+     *
+     * @complexity O(n) total where n = number of requests; memory is O(concurrency) at any moment.
+     * @since      6.0
      */
     public function __construct(Client_Interface $client, $requests, array $config = [])
     {

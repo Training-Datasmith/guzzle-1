@@ -66,13 +66,23 @@ class Client implements Client_Interface, \Psr\Http\Client\Client_Interface
         $this->configure_defaults($config);
     }
     /**
-     * @param array  $args
+     * Magic method providing shorthand HTTP verb methods (get, post, put, delete, …).
      *
-     * @return PromiseInterface|ResponseInterface
-     * @deprecated Client::__call will be removed in guzzlehttp/guzzle:8.0.
+     * Synchronous call:  `$client->get($uri, $options)` → `ResponseInterface`
+     * Async call suffix: `$client->getAsync($uri, $options)` → `PromiseInterface`
+     *
+     * @param  string                    $method The HTTP verb or verb+'Async' (e.g. 'post', 'putAsync').
+     * @param  array<int, mixed>         $args   First element is the URI (string|UriInterface),
+     *                                           second optional element is the options array.
+     *
+     * @return Promise_Interface|Response_Interface
+     * @throws InvalidArgumentException When called with fewer than one argument.
+     * @deprecated since 7.0 — Use the explicit send()/sendAsync()/request()/requestAsync() methods instead.
+     *             Client::__call will be removed in guzzlehttp/guzzle:8.0.
      */
-    public function __call(string $method, array $args)
+    public function __call(string $method, array $args): Promise_Interface|Response_Interface
     {
+        trigger_error("Client::{$method}() via magic __call is deprecated since Guzzle 7.0 and will be removed in 8.0. Use request()/requestAsync() instead.", E_USER_DEPRECATED);
         if (\count($args) < 1) {
             throw new InvalidArgumentException('Magic request methods require a URI and optional options array');
         }
@@ -81,10 +91,19 @@ class Client implements Client_Interface, \Psr\Http\Client\Client_Interface
         return \substr($method, -5) === 'Async' ? $this->request_async(\substr($method, 0, -5), $uri, $opts) : $this->request($method, $uri, $opts);
     }
     /**
-     * Asynchronously send an HTTP request.
+     * Asynchronously send a PSR-7 request object.
      *
-     * @param array $options Request options to apply to the given
-     *                       request and to the transfer. See \GuzzleHttp\RequestOptions.
+     * The returned promise resolves with a `ResponseInterface` on success.
+     * Use `->wait()` to block until the response is received.
+     *
+     * @param  Request_Interface      $request The PSR-7 request to send. Its URI may be merged with base_uri.
+     * @param  array<string, mixed>   $options Per-request options that override client defaults.
+     *                                         See {@see Request_Options} for the full list.
+     *
+     * @return Promise_Interface A promise that resolves with a ResponseInterface.
+     * @since  6.0
+     * @see    send()          The synchronous variant.
+     * @see    request_async() For building requests from method/URI strings.
      */
     public function send_async(Request_Interface $request, array $options = []): Promise_Interface
     {
@@ -93,12 +112,19 @@ class Client implements Client_Interface, \Psr\Http\Client\Client_Interface
         return $this->transfer($request->with_uri($this->build_uri($request->get_uri(), $options), $request->has_header('Host')), $options);
     }
     /**
-     * Send an HTTP request.
+     * Synchronously send a PSR-7 request and return the response.
      *
-     * @param array $options Request options to apply to the given
-     *                       request and to the transfer. See \GuzzleHttp\RequestOptions.
+     * Blocks until the full response is received or an exception is thrown.
+     * HTTP error status codes (4xx, 5xx) throw a `Bad_Response_Exception`
+     * unless `http_errors` is set to false.
      *
-     * @throws GuzzleException
+     * @param  Request_Interface    $request The PSR-7 request to send.
+     * @param  array<string, mixed> $options Per-request overrides; see {@see Request_Options}.
+     *
+     * @return Response_Interface The PSR-7 response object.
+     * @throws \Guzzle_Http\Exception\Guzzle_Exception On network error or (by default) 4xx/5xx response.
+     * @since  6.0
+     * @see    send_async() The non-blocking variant.
      */
     public function send(Request_Interface $request, array $options = []): Response_Interface
     {
@@ -165,20 +191,18 @@ class Client implements Client_Interface, \Psr\Http\Client\Client_Interface
         return $this->request_async($method, $uri, $options)->wait();
     }
     /**
-     * Get a client configuration option.
+     * Returns a client configuration option or the entire config array.
      *
-     * These options include default request options of the client, a "handler"
-     * (if utilized by the concrete client), and a "base_uri" if utilized by
-     * the concrete client.
+     * @param  ?string $option The option key to retrieve (e.g. 'base_uri', 'timeout').
+     *                         Pass null to retrieve the full configuration array.
      *
-     * @param string|null $option The config option to retrieve.
+     * @return mixed The option value, or null if the key does not exist, or the full array when $option is null.
      *
-     * @return mixed
-     *
-     * @deprecated Client::getConfig will be removed in guzzlehttp/guzzle:8.0.
+     * @deprecated since 7.0 — Inspect options at construction time; this method will be removed in guzzlehttp/guzzle:8.0.
      */
-    public function get_config(?string $option = null)
+    public function get_config(?string $option = null): mixed
     {
+        trigger_error('Client::get_config() is deprecated since Guzzle 7.0 and will be removed in 8.0.', E_USER_DEPRECATED);
         return $option === null ? $this->config : $this->config[$option] ?? null;
     }
     private function build_uri(Uri_Interface $uri, array $config): Uri_Interface
