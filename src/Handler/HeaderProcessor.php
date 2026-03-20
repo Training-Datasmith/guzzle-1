@@ -1,15 +1,13 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http\Handler;
 
-namespace GuzzleHttp\Handler;
-
-use GuzzleHttp\Utils;
-
+use Guzzle_Http\Utils;
 /**
  * @internal
  */
-final class HeaderProcessor
+final class Header_Processor
 {
     /**
      * Returns the HTTP version, status code, reason phrase, and headers.
@@ -20,25 +18,20 @@ final class HeaderProcessor
      *
      * @throws \RuntimeException
      */
-    public static function parseHeaders(array $headers): array
+    public static function parse_headers(array $headers): array
     {
         if ($headers === []) {
             throw new \RuntimeException('Expected a non-empty array of header data');
         }
-
         $parts = \explode(' ', \array_shift($headers), 3);
         $version = \explode('/', $parts[0])[1] ?? null;
-
         if ($version === null) {
             throw new \RuntimeException('HTTP version missing from header data');
         }
-
         $status = $parts[1] ?? null;
-
         if ($status === null) {
             throw new \RuntimeException('HTTP status code missing from header data');
         }
-
-        return [$version, (int) $status, $parts[2] ?? null, Utils::headersFromLines($headers)];
+        return [$version, (int) $status, $parts[2] ?? null, Utils::headers_from_lines($headers)];
     }
 }

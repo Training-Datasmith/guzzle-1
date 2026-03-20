@@ -1,9 +1,8 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http\Exception;
 
-namespace GuzzleHttp\Exception;
-
-class TransferException extends \RuntimeException implements GuzzleException
+class Transfer_Exception extends \RuntimeException implements Guzzle_Exception
 {
 }

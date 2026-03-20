@@ -1,104 +1,82 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http\Handler;
 
-namespace GuzzleHttp\Handler;
-
-use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Utils;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
-
+use Guzzle_Http\Psr7\Response;
+use Guzzle_Http\Utils;
+use Psr\Http\Message\Request_Interface;
+use Psr\Http\Message\Response_Interface;
+use Psr\Http\Message\Stream_Interface;
 /**
  * Represents a cURL easy handle and the data it populates.
  *
  * @internal
  */
-final class EasyHandle
+final class Easy_Handle
 {
     /**
      * @var resource|\CurlHandle cURL resource
      */
     public $handle;
-
     /**
      * @var StreamInterface Where data is being written
      */
     public $sink;
-
     /**
      * @var array Received HTTP headers so far
      */
     public $headers = [];
-
     /**
      * @var ResponseInterface|null Received response (if any)
      */
     public $response;
-
     /**
      * @var RequestInterface Request being sent
      */
     public $request;
-
     /**
      * @var array Request options
      */
     public $options = [];
-
     /**
      * @var int cURL error number (if any)
      */
     public $errno = 0;
-
     /**
      * @var \Throwable|null Exception during on_headers (if any)
      */
-    public $onHeadersException;
-
+    public $on_headers_exception;
     /**
      * @var \Exception|null Exception during createResponse (if any)
      */
-    public $createResponseException;
-
+    public $create_response_exception;
     /**
      * Attach a response to the easy handle based on the received headers.
      *
      * @throws \RuntimeException if no headers have been received or the first
      *                           header line is invalid.
      */
-    public function createResponse(): void
+    public function create_response(): void
     {
-        [$ver, $status, $reason, $headers] = HeaderProcessor::parseHeaders($this->headers);
-
-        $normalizedKeys = Utils::normalizeHeaderKeys($headers);
-
-        if (!empty($this->options['decode_content']) && isset($normalizedKeys['content-encoding'])) {
-            $headers['x-encoded-content-encoding'] = $headers[$normalizedKeys['content-encoding']];
-            unset($headers[$normalizedKeys['content-encoding']]);
-            if (isset($normalizedKeys['content-length'])) {
-                $headers['x-encoded-content-length'] = $headers[$normalizedKeys['content-length']];
-
-                $bodyLength = (int) $this->sink->getSize();
-                if ($bodyLength) {
-                    $headers[$normalizedKeys['content-length']] = $bodyLength;
+        [$ver, $status, $reason, $headers] = Header_Processor::parse_headers($this->headers);
+        $normalized_keys = Utils::normalize_header_keys($headers);
+        if (!empty($this->options['decode_content']) && isset($normalized_keys['content-encoding'])) {
+            $headers['x-encoded-content-encoding'] = $headers[$normalized_keys['content-encoding']];
+            unset($headers[$normalized_keys['content-encoding']]);
+            if (isset($normalized_keys['content-length'])) {
+                $headers['x-encoded-content-length'] = $headers[$normalized_keys['content-length']];
+                $body_length = (int) $this->sink->get_size();
+                if ($body_length) {
+                    $headers[$normalized_keys['content-length']] = $body_length;
                 } else {
-                    unset($headers[$normalizedKeys['content-length']]);
+                    unset($headers[$normalized_keys['content-length']]);
                 }
             }
         }
-
         // Attach a response to the easy handle with the parsed headers.
-        $this->response = new Response(
-            $status,
-            $headers,
-            $this->sink,
-            $ver,
-            $reason
-        );
+        $this->response = new Response($status, $headers, $this->sink, $ver, $reason);
     }
-
     /**
      *
      * @return void
@@ -106,7 +84,7 @@ final class EasyHandle
      */
     public function __get(string $name)
     {
-        $msg = $name === 'handle' ? 'The EasyHandle has been released' : 'Invalid property: '.$name;
+        $msg = $name === 'handle' ? 'The EasyHandle has been released' : 'Invalid property: ' . $name;
         throw new \BadMethodCallException($msg);
     }
 }

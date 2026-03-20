@@ -1,12 +1,10 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http\Cookie;
 
-namespace GuzzleHttp\Cookie;
-
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-
+use Psr\Http\Message\Request_Interface;
+use Psr\Http\Message\Response_Interface;
 /**
  * Stores HTTP cookies.
  *
@@ -19,7 +17,7 @@ use Psr\Http\Message\ResponseInterface;
  *
  * @extends \IteratorAggregate<SetCookie>
  */
-interface CookieJarInterface extends \Countable, \IteratorAggregate
+interface Cookie_Jar_Interface extends \Countable, \IteratorAggregate
 {
     /**
      * Create a request with added cookie headers.
@@ -31,16 +29,14 @@ interface CookieJarInterface extends \Countable, \IteratorAggregate
      *
      * @return RequestInterface returns the modified request.
      */
-    public function withCookieHeader(RequestInterface $request): RequestInterface;
-
+    public function with_cookie_header(Request_Interface $request): Request_Interface;
     /**
      * Extract cookies from an HTTP response and store them in the CookieJar.
      *
      * @param RequestInterface  $request  Request that was sent
      * @param ResponseInterface $response Response that was received
      */
-    public function extractCookies(RequestInterface $request, ResponseInterface $response): void;
-
+    public function extract_cookies(Request_Interface $request, Response_Interface $response): void;
     /**
      * Sets a cookie in the cookie jar.
      *
@@ -48,8 +44,7 @@ interface CookieJarInterface extends \Countable, \IteratorAggregate
      *
      * @return bool Returns true on success or false on failure
      */
-    public function setCookie(SetCookie $cookie): bool;
-
+    public function set_cookie(Set_Cookie $cookie): bool;
     /**
      * Remove cookies currently held in the cookie jar.
      *
@@ -65,7 +60,6 @@ interface CookieJarInterface extends \Countable, \IteratorAggregate
      * @param string|null $name   Clears cookies matching a domain, path, and name
      */
     public function clear(?string $domain = null, ?string $path = null, ?string $name = null): void;
-
     /**
      * Discard all sessions cookies.
      *
@@ -73,10 +67,9 @@ interface CookieJarInterface extends \Countable, \IteratorAggregate
      * field set to true. To be called when the user agent shuts down according
      * to RFC 2965.
      */
-    public function clearSessionCookies(): void;
-
+    public function clear_session_cookies(): void;
     /**
      * Converts the cookie jar to an array.
      */
-    public function toArray(): array;
+    public function to_array(): array;
 }

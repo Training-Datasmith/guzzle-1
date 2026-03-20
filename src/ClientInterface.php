@@ -1,25 +1,22 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http;
 
-namespace GuzzleHttp;
-
-use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Promise\PromiseInterface;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\UriInterface;
-
+use Guzzle_Http\Exception\Guzzle_Exception;
+use Guzzle_Http\Promise\Promise_Interface;
+use Psr\Http\Message\Request_Interface;
+use Psr\Http\Message\Response_Interface;
+use Psr\Http\Message\Uri_Interface;
 /**
  * Client interface for sending HTTP requests.
  */
-interface ClientInterface
+interface Client_Interface
 {
     /**
      * The Guzzle major version.
      */
     public const MAJOR_VERSION = 7;
-
     /**
      * Send an HTTP request.
      *
@@ -29,8 +26,7 @@ interface ClientInterface
      *
      * @throws GuzzleException
      */
-    public function send(RequestInterface $request, array $options = []): ResponseInterface;
-
+    public function send(Request_Interface $request, array $options = []): Response_Interface;
     /**
      * Asynchronously send an HTTP request.
      *
@@ -38,8 +34,7 @@ interface ClientInterface
      * @param array            $options Request options to apply to the given
      *                                  request and to the transfer.
      */
-    public function sendAsync(RequestInterface $request, array $options = []): PromiseInterface;
-
+    public function send_async(Request_Interface $request, array $options = []): Promise_Interface;
     /**
      * Create and send an HTTP request.
      *
@@ -53,8 +48,7 @@ interface ClientInterface
      *
      * @throws GuzzleException
      */
-    public function request(string $method, $uri, array $options = []): ResponseInterface;
-
+    public function request(string $method, $uri, array $options = []): Response_Interface;
     /**
      * Create and send an asynchronous HTTP request.
      *
@@ -67,8 +61,7 @@ interface ClientInterface
      * @param string|UriInterface $uri     URI object or string.
      * @param array               $options Request options to apply.
      */
-    public function requestAsync(string $method, $uri, array $options = []): PromiseInterface;
-
+    public function request_async(string $method, $uri, array $options = []): Promise_Interface;
     /**
      * Get a client configuration option.
      *
@@ -82,5 +75,5 @@ interface ClientInterface
      *
      * @deprecated ClientInterface::getConfig will be removed in guzzlehttp/guzzle:8.0.
      */
-    public function getConfig(?string $option = null);
+    public function get_config(?string $option = null);
 }

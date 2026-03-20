@@ -1,9 +1,8 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http\Exception;
 
-namespace GuzzleHttp\Exception;
-
-final class InvalidArgumentException extends \InvalidArgumentException implements GuzzleException
+final class InvalidArgumentException extends \InvalidArgumentException implements Guzzle_Exception
 {
 }

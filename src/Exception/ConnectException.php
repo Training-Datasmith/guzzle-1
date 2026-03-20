@@ -1,48 +1,38 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http\Exception;
 
-namespace GuzzleHttp\Exception;
-
-use Psr\Http\Client\NetworkExceptionInterface;
-use Psr\Http\Message\RequestInterface;
-
+use Psr\Http\Client\Network_Exception_Interface;
+use Psr\Http\Message\Request_Interface;
 /**
  * Exception thrown when a connection cannot be established.
  *
  * Note that no response is present for a ConnectException
  */
-class ConnectException extends TransferException implements NetworkExceptionInterface
+class Connect_Exception extends Transfer_Exception implements Network_Exception_Interface
 {
     /**
      * @var RequestInterface
      */
     private $request;
-
     /**
      * @var array
      */
-    private $handlerContext;
-
-    public function __construct(
-        string $message,
-        RequestInterface $request,
-        ?\Throwable $previous = null,
-        array $handlerContext = []
-    ) {
+    private $handler_context;
+    public function __construct(string $message, Request_Interface $request, ?\Throwable $previous = null, array $handler_context = [])
+    {
         parent::__construct($message, 0, $previous);
         $this->request = $request;
-        $this->handlerContext = $handlerContext;
+        $this->handler_context = $handler_context;
     }
-
     /**
      * Get the request that caused the exception
      */
-    public function getRequest(): RequestInterface
+    public function get_request(): Request_Interface
     {
         return $this->request;
     }
-
     /**
      * Get contextual information about the error from the underlying handler.
      *
@@ -51,8 +41,8 @@ class ConnectException extends TransferException implements NetworkExceptionInte
      * couple you to a specific handler, but can give more debug information
      * when needed.
      */
-    public function getHandlerContext(): array
+    public function get_handler_context(): array
     {
-        return $this->handlerContext;
+        return $this->handler_context;
     }
 }

@@ -1,12 +1,10 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http\Handler;
 
-namespace GuzzleHttp\Handler;
-
-use GuzzleHttp\Promise\PromiseInterface;
-use Psr\Http\Message\RequestInterface;
-
+use Guzzle_Http\Promise\Promise_Interface;
+use Psr\Http\Message\Request_Interface;
 /**
  * HTTP handler that uses cURL easy handles as a transport layer.
  *
@@ -16,13 +14,12 @@ use Psr\Http\Message\RequestInterface;
  *
  * @final
  */
-class CurlHandler
+class Curl_Handler
 {
     /**
      * @var CurlFactoryInterface
      */
     private $factory;
-
     /**
      * Accepts an associative array of options:
      *
@@ -32,20 +29,16 @@ class CurlHandler
      */
     public function __construct(array $options = [])
     {
-        $this->factory = $options['handle_factory']
-            ?? new CurlFactory(3);
+        $this->factory = $options['handle_factory'] ?? new Curl_Factory(3);
     }
-
-    public function __invoke(RequestInterface $request, array $options): PromiseInterface
+    public function __invoke(Request_Interface $request, array $options): Promise_Interface
     {
         if (isset($options['delay'])) {
             \usleep($options['delay'] * 1000);
         }
-
         $easy = $this->factory->create($request, $options);
         \curl_exec($easy->handle);
         $easy->errno = \curl_errno($easy->handle);
-
-        return CurlFactory::finish($this, $easy, $this->factory);
+        return Curl_Factory::finish($this, $easy, $this->factory);
     }
 }

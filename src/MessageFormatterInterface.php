@@ -1,13 +1,11 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http;
 
-namespace GuzzleHttp;
-
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-
-interface MessageFormatterInterface
+use Psr\Http\Message\Request_Interface;
+use Psr\Http\Message\Response_Interface;
+interface Message_Formatter_Interface
 {
     /**
      * Returns a formatted message string.
@@ -16,5 +14,5 @@ interface MessageFormatterInterface
      * @param ResponseInterface|null $response Response that was received
      * @param \Throwable|null        $error    Exception that was received
      */
-    public function format(RequestInterface $request, ?ResponseInterface $response = null, ?\Throwable $error = null): string;
+    public function format(Request_Interface $request, ?Response_Interface $response = null, ?\Throwable $error = null): string;
 }

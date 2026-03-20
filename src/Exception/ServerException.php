@@ -1,12 +1,11 @@
 <?php
 
-declare(strict_types=1);
-
-namespace GuzzleHttp\Exception;
+declare (strict_types=1);
+namespace Guzzle_Http\Exception;
 
 /**
  * Exception when a server error is encountered (5xx codes)
  */
-class ServerException extends BadResponseException
+class Server_Exception extends Bad_Response_Exception
 {
 }

@@ -1,13 +1,11 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http;
 
-namespace GuzzleHttp;
-
-use Psr\Http\Message\MessageInterface;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-
+use Psr\Http\Message\Message_Interface;
+use Psr\Http\Message\Request_Interface;
+use Psr\Http\Message\Response_Interface;
 /**
  * Formats log messages using variable substitutions for requests, responses,
  * and other transactional data.
@@ -37,7 +35,7 @@ use Psr\Http\Message\ResponseInterface;
  *
  * @final
  */
-class MessageFormatter implements MessageFormatterInterface
+class Message_Formatter implements Message_Formatter_Interface
 {
     /**
      * Apache Common Log Format.
@@ -49,12 +47,10 @@ class MessageFormatter implements MessageFormatterInterface
     public const CLF = '{hostname} {req_header_User-Agent} - [{date_common_log}] "{method} {target} HTTP/{version}" {code} {res_header_Content-Length}';
     public const DEBUG = ">>>>>>>>\n{request}\n<<<<<<<<\n{response}\n--------\n{error}";
     public const SHORT = '[{ts}] "{method} {target} HTTP/{version}" {code}';
-
     /**
      * @var string Template used to format log messages
      */
     private $template;
-
     /**
      * @param string $template Log message template
      */
@@ -62,7 +58,6 @@ class MessageFormatter implements MessageFormatterInterface
     {
         $this->template = $template ?: self::CLF;
     }
-
     /**
      * Returns a formatted message string.
      *
@@ -70,130 +65,103 @@ class MessageFormatter implements MessageFormatterInterface
      * @param ResponseInterface|null $response Response that was received
      * @param \Throwable|null        $error    Exception that was received
      */
-    public function format(RequestInterface $request, ?ResponseInterface $response = null, ?\Throwable $error = null): string
+    public function format(Request_Interface $request, ?Response_Interface $response = null, ?\Throwable $error = null): string
     {
         $cache = [];
-
         /** @var string */
-        return \preg_replace_callback(
-            '/{\s*([A-Za-z_\-\.0-9]+)\s*}/',
-            function (array $matches) use ($request, $response, $error, &$cache) {
-                if (isset($cache[$matches[1]])) {
-                    return $cache[$matches[1]];
-                }
-
-                $result = '';
-                switch ($matches[1]) {
-                    case 'request':
-                        $result = Psr7\Message::toString($request);
+        return \preg_replace_callback('/{\s*([A-Za-z_\-\.0-9]+)\s*}/', function (array $matches) use ($request, $response, $error, &$cache) {
+            if (isset($cache[$matches[1]])) {
+                return $cache[$matches[1]];
+            }
+            $result = '';
+            switch ($matches[1]) {
+                case 'request':
+                    $result = Psr7\Message::to_string($request);
+                    break;
+                case 'response':
+                    $result = $response ? Psr7\Message::to_string($response) : '';
+                    break;
+                case 'req_headers':
+                    $result = \trim($request->get_method() . ' ' . $request->get_request_target()) . ' HTTP/' . $request->get_protocol_version() . "\r\n" . $this->headers($request);
+                    break;
+                case 'res_headers':
+                    $result = $response ? \sprintf('HTTP/%s %d %s', $response->get_protocol_version(), $response->get_status_code(), $response->get_reason_phrase()) . "\r\n" . $this->headers($response) : 'NULL';
+                    break;
+                case 'req_body':
+                    $result = $request->get_body()->__toString();
+                    break;
+                case 'res_body':
+                    if (!$response instanceof Response_Interface) {
+                        $result = 'NULL';
                         break;
-                    case 'response':
-                        $result = $response ? Psr7\Message::toString($response) : '';
+                    }
+                    $body = $response->get_body();
+                    if (!$body->is_seekable()) {
+                        $result = 'RESPONSE_NOT_LOGGEABLE';
                         break;
-                    case 'req_headers':
-                        $result = \trim($request->getMethod()
-                                .' '.$request->getRequestTarget())
-                            .' HTTP/'.$request->getProtocolVersion()."\r\n"
-                            .$this->headers($request);
-                        break;
-                    case 'res_headers':
-                        $result = $response ?
-                            \sprintf(
-                                'HTTP/%s %d %s',
-                                $response->getProtocolVersion(),
-                                $response->getStatusCode(),
-                                $response->getReasonPhrase()
-                            )."\r\n".$this->headers($response)
-                            : 'NULL';
-                        break;
-                    case 'req_body':
-                        $result = $request->getBody()->__toString();
-                        break;
-                    case 'res_body':
-                        if (!$response instanceof ResponseInterface) {
-                            $result = 'NULL';
-                            break;
-                        }
-
-                        $body = $response->getBody();
-
-                        if (!$body->isSeekable()) {
-                            $result = 'RESPONSE_NOT_LOGGEABLE';
-                            break;
-                        }
-
-                        $result = $response->getBody()->__toString();
-                        break;
-                    case 'ts':
-                    case 'date_iso_8601':
-                        $result = \gmdate('c');
-                        break;
-                    case 'date_common_log':
-                        $result = \date('d/M/Y:H:i:s O');
-                        break;
-                    case 'method':
-                        $result = $request->getMethod();
-                        break;
-                    case 'version':
-                    case 'req_version':
-                        $result = $request->getProtocolVersion();
-                        break;
-                    case 'uri':
-                    case 'url':
-                        $result = $request->getUri()->__toString();
-                        break;
-                    case 'target':
-                        $result = $request->getRequestTarget();
-                        break;
-                    case 'res_version':
-                        $result = $response
-                            ? $response->getProtocolVersion()
-                            : 'NULL';
-                        break;
-                    case 'host':
-                        $result = $request->getHeaderLine('Host');
-                        break;
-                    case 'hostname':
-                        $result = \gethostname();
-                        break;
-                    case 'code':
-                        $result = $response ? $response->getStatusCode() : 'NULL';
-                        break;
-                    case 'phrase':
-                        $result = $response ? $response->getReasonPhrase() : 'NULL';
-                        break;
-                    case 'error':
-                        $result = $error ? $error->getMessage() : 'NULL';
-                        break;
-                    default:
-                        // handle prefixed dynamic headers
-                        if (\strpos($matches[1], 'req_header_') === 0) {
-                            $result = $request->getHeaderLine(\substr($matches[1], 11));
-                        } elseif (\strpos($matches[1], 'res_header_') === 0) {
-                            $result = $response
-                                ? $response->getHeaderLine(\substr($matches[1], 11))
-                                : 'NULL';
-                        }
-                }
-
-                $cache[$matches[1]] = $result;
-
-                return $result;
-            },
-            $this->template
-        );
+                    }
+                    $result = $response->get_body()->__toString();
+                    break;
+                case 'ts':
+                case 'date_iso_8601':
+                    $result = \gmdate('c');
+                    break;
+                case 'date_common_log':
+                    $result = \date('d/M/Y:H:i:s O');
+                    break;
+                case 'method':
+                    $result = $request->get_method();
+                    break;
+                case 'version':
+                case 'req_version':
+                    $result = $request->get_protocol_version();
+                    break;
+                case 'uri':
+                case 'url':
+                    $result = $request->get_uri()->__toString();
+                    break;
+                case 'target':
+                    $result = $request->get_request_target();
+                    break;
+                case 'res_version':
+                    $result = $response ? $response->get_protocol_version() : 'NULL';
+                    break;
+                case 'host':
+                    $result = $request->get_header_line('Host');
+                    break;
+                case 'hostname':
+                    $result = \gethostname();
+                    break;
+                case 'code':
+                    $result = $response ? $response->get_status_code() : 'NULL';
+                    break;
+                case 'phrase':
+                    $result = $response ? $response->get_reason_phrase() : 'NULL';
+                    break;
+                case 'error':
+                    $result = $error ? $error->get_message() : 'NULL';
+                    break;
+                default:
+                    // handle prefixed dynamic headers
+                    if (\strpos($matches[1], 'req_header_') === 0) {
+                        $result = $request->get_header_line(\substr($matches[1], 11));
+                    } elseif (\strpos($matches[1], 'res_header_') === 0) {
+                        $result = $response ? $response->get_header_line(\substr($matches[1], 11)) : 'NULL';
+                    }
+            }
+            $cache[$matches[1]] = $result;
+            return $result;
+        }, $this->template);
     }
-
     /**
      * Get headers from message as string
      */
-    private function headers(MessageInterface $message): string
+    private function headers(Message_Interface $message): string
     {
         $result = '';
-        foreach ($message->getHeaders() as $name => $values) {
-            $result .= $name.': '.\implode(', ', $values)."\r\n";
+        foreach ($message->get_headers() as $name => $values) {
+            $result .= $name . ': ' . \implode(', ', $values) . "\r\n";
         }
-
         return \trim($result);
     }
 }

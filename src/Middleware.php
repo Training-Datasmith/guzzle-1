@@ -1,17 +1,15 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http;
 
-namespace GuzzleHttp;
-
-use GuzzleHttp\Cookie\CookieJarInterface;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Promise as P;
-use GuzzleHttp\Promise\PromiseInterface;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Log\LoggerInterface;
-
+use Guzzle_Http\Cookie\Cookie_Jar_Interface;
+use Guzzle_Http\Exception\Request_Exception;
+use Guzzle_Http\Promise as P;
+use Guzzle_Http\Promise\Promise_Interface;
+use Psr\Http\Message\Request_Interface;
+use Psr\Http\Message\Response_Interface;
+use Psr\Log\Logger_Interface;
 /**
  * Functions used to create and wrap handlers with handler middleware.
  */
@@ -32,24 +30,18 @@ final class Middleware
                 if (empty($options['cookies'])) {
                     return $handler($request, $options);
                 }
-                if (!$options['cookies'] instanceof CookieJarInterface) {
+                if (!$options['cookies'] instanceof Cookie_Jar_Interface) {
                     throw new \InvalidArgumentException('cookies must be an instance of GuzzleHttp\Cookie\CookieJarInterface');
                 }
-                $cookieJar = $options['cookies'];
-                $request = $cookieJar->withCookieHeader($request);
-
-                return $handler($request, $options)
-                    ->then(
-                        static function (ResponseInterface $response) use ($cookieJar, $request): ResponseInterface {
-                            $cookieJar->extractCookies($request, $response);
-
-                            return $response;
-                        }
-                    );
+                $cookie_jar = $options['cookies'];
+                $request = $cookie_jar->with_cookie_header($request);
+                return $handler($request, $options)->then(static function (Response_Interface $response) use ($cookie_jar, $request): Response_Interface {
+                    $cookie_jar->extract_cookies($request, $response);
+                    return $response;
+                });
             };
         };
     }
-
     /**
      * Middleware that throws exceptions for 4xx or 5xx responses when the
      * "http_errors" request option is set to true.
@@ -58,27 +50,23 @@ final class Middleware
      *
      * @return callable(callable): callable Returns a function that accepts the next handler.
      */
-    public static function httpErrors(?BodySummarizerInterface $bodySummarizer = null): callable
+    public static function http_errors(?Body_Summarizer_Interface $body_summarizer = null): callable
     {
-        return static function (callable $handler) use ($bodySummarizer): callable {
-            return static function ($request, array $options) use ($handler, $bodySummarizer) {
+        return static function (callable $handler) use ($body_summarizer): callable {
+            return static function ($request, array $options) use ($handler, $body_summarizer) {
                 if (empty($options['http_errors'])) {
                     return $handler($request, $options);
                 }
-
-                return $handler($request, $options)->then(
-                    static function (ResponseInterface $response) use ($request, $bodySummarizer): \Psr\Http\Message\ResponseInterface {
-                        $code = $response->getStatusCode();
-                        if ($code < 400) {
-                            return $response;
-                        }
-                        throw RequestException::create($request, $response, null, [], $bodySummarizer);
+                return $handler($request, $options)->then(static function (Response_Interface $response) use ($request, $body_summarizer): \Psr\Http\Message\Response_Interface {
+                    $code = $response->get_status_code();
+                    if ($code < 400) {
+                        return $response;
                     }
-                );
+                    throw Request_Exception::create($request, $response, null, [], $body_summarizer);
+                });
             };
         };
     }
-
     /**
      * Middleware that pushes history data to an ArrayAccess container.
      *
@@ -93,35 +81,18 @@ final class Middleware
         if (!\is_array($container) && !$container instanceof \ArrayAccess) {
             throw new \InvalidArgumentException('history container must be an array or object implementing ArrayAccess');
         }
-
         return static function (callable $handler) use (&$container): callable {
-            return static function (RequestInterface $request, array $options) use ($handler, &$container) {
-                return $handler($request, $options)->then(
-                    static function ($value) use ($request, &$container, $options) {
-                        $container[] = [
-                            'request' => $request,
-                            'response' => $value,
-                            'error' => null,
-                            'options' => $options,
-                        ];
-
-                        return $value;
-                    },
-                    static function ($reason) use ($request, &$container, $options) {
-                        $container[] = [
-                            'request' => $request,
-                            'response' => null,
-                            'error' => $reason,
-                            'options' => $options,
-                        ];
-
-                        return P\Create::rejectionFor($reason);
-                    }
-                );
+            return static function (Request_Interface $request, array $options) use ($handler, &$container) {
+                return $handler($request, $options)->then(static function ($value) use ($request, &$container, $options) {
+                    $container[] = ['request' => $request, 'response' => $value, 'error' => null, 'options' => $options];
+                    return $value;
+                }, static function ($reason) use ($request, &$container, $options) {
+                    $container[] = ['request' => $request, 'response' => null, 'error' => $reason, 'options' => $options];
+                    return P\Create::rejection_for($reason);
+                });
             };
         };
     }
-
     /**
      * Middleware that invokes a callback before and after sending a request.
      *
@@ -138,7 +109,7 @@ final class Middleware
     public static function tap(?callable $before = null, ?callable $after = null): callable
     {
         return static function (callable $handler) use ($before, $after): callable {
-            return static function (RequestInterface $request, array $options) use ($handler, $before, $after) {
+            return static function (Request_Interface $request, array $options) use ($handler, $before, $after) {
                 if ($before) {
                     $before($request, $options);
                 }
@@ -146,12 +117,10 @@ final class Middleware
                 if ($after) {
                     $after($request, $options, $response);
                 }
-
                 return $response;
             };
         };
     }
-
     /**
      * Middleware that handles request redirects.
      *
@@ -159,11 +128,10 @@ final class Middleware
      */
     public static function redirect(): callable
     {
-        return static function (callable $handler): RedirectMiddleware {
-            return new RedirectMiddleware($handler);
+        return static function (callable $handler): Redirect_Middleware {
+            return new Redirect_Middleware($handler);
         };
     }
-
     /**
      * Middleware that retries requests based on the boolean result of
      * invoking the provided "decider" function.
@@ -181,11 +149,10 @@ final class Middleware
      */
     public static function retry(callable $decider, ?callable $delay = null): callable
     {
-        return static function (callable $handler) use ($decider, $delay): RetryMiddleware {
-            return new RetryMiddleware($decider, $handler, $delay);
+        return static function (callable $handler) use ($decider, $delay): Retry_Middleware {
+            return new Retry_Middleware($decider, $handler, $delay);
         };
     }
-
     /**
      * Middleware that logs requests, responses, and errors using a message
      * formatter.
@@ -198,45 +165,37 @@ final class Middleware
      *
      * @return callable Returns a function that accepts the next handler.
      */
-    public static function log(LoggerInterface $logger, $formatter, string $logLevel = 'info'): callable
+    public static function log(Logger_Interface $logger, $formatter, string $log_level = 'info'): callable
     {
         // To be compatible with Guzzle 7.1.x we need to allow users to pass a MessageFormatter
-        if (!$formatter instanceof MessageFormatter && !$formatter instanceof MessageFormatterInterface) {
-            throw new \LogicException(sprintf('Argument 2 to %s::log() must be of type %s', self::class, MessageFormatterInterface::class));
+        if (!$formatter instanceof Message_Formatter && !$formatter instanceof Message_Formatter_Interface) {
+            throw new \LogicException(sprintf('Argument 2 to %s::log() must be of type %s', self::class, Message_Formatter_Interface::class));
         }
-
-        return static function (callable $handler) use ($logger, $formatter, $logLevel): callable {
-            return static function (RequestInterface $request, array $options = []) use ($handler, $logger, $formatter, $logLevel) {
-                return $handler($request, $options)->then(
-                    static function (?\Psr\Http\Message\ResponseInterface $response) use ($logger, $request, $formatter, $logLevel): ResponseInterface {
-                        $message = $formatter->format($request, $response);
-                        $logger->log($logLevel, $message);
-
-                        return $response;
-                    },
-                    static function ($reason) use ($logger, $request, $formatter): PromiseInterface {
-                        $response = $reason instanceof RequestException ? $reason->getResponse() : null;
-                        $message = $formatter->format($request, $response, P\Create::exceptionFor($reason));
-                        $logger->error($message);
-
-                        return P\Create::rejectionFor($reason);
-                    }
-                );
+        return static function (callable $handler) use ($logger, $formatter, $log_level): callable {
+            return static function (Request_Interface $request, array $options = []) use ($handler, $logger, $formatter, $log_level) {
+                return $handler($request, $options)->then(static function (?\Psr\Http\Message\Response_Interface $response) use ($logger, $request, $formatter, $log_level): Response_Interface {
+                    $message = $formatter->format($request, $response);
+                    $logger->log($log_level, $message);
+                    return $response;
+                }, static function ($reason) use ($logger, $request, $formatter): Promise_Interface {
+                    $response = $reason instanceof Request_Exception ? $reason->get_response() : null;
+                    $message = $formatter->format($request, $response, P\Create::exception_for($reason));
+                    $logger->error($message);
+                    return P\Create::rejection_for($reason);
+                });
             };
         };
     }
-
     /**
      * This middleware adds a default content-type if possible, a default
      * content-length or transfer-encoding header, and the expect header.
      */
-    public static function prepareBody(): callable
+    public static function prepare_body(): callable
     {
-        return static function (callable $handler): PrepareBodyMiddleware {
-            return new PrepareBodyMiddleware($handler);
+        return static function (callable $handler): Prepare_Body_Middleware {
+            return new Prepare_Body_Middleware($handler);
         };
     }
-
     /**
      * Middleware that applies a map function to the request before passing to
      * the next handler.
@@ -244,15 +203,14 @@ final class Middleware
      * @param callable $fn Function that accepts a RequestInterface and returns
      *                     a RequestInterface.
      */
-    public static function mapRequest(callable $fn): callable
+    public static function map_request(callable $fn): callable
     {
         return static function (callable $handler) use ($fn): callable {
-            return static function (RequestInterface $request, array $options) use ($handler, $fn) {
+            return static function (Request_Interface $request, array $options) use ($handler, $fn) {
                 return $handler($fn($request), $options);
             };
         };
     }
-
     /**
      * Middleware that applies a map function to the resolved promise's
      * response.
@@ -260,10 +218,10 @@ final class Middleware
      * @param callable $fn Function that accepts a ResponseInterface and
      *                     returns a ResponseInterface.
      */
-    public static function mapResponse(callable $fn): callable
+    public static function map_response(callable $fn): callable
     {
         return static function (callable $handler) use ($fn): callable {
-            return static function (RequestInterface $request, array $options) use ($handler, $fn) {
+            return static function (Request_Interface $request, array $options) use ($handler, $fn) {
                 return $handler($request, $options)->then($fn);
             };
         };

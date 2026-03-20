@@ -1,26 +1,22 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
+namespace Guzzle_Http\Cookie;
 
-namespace GuzzleHttp\Cookie;
-
-use GuzzleHttp\Utils;
-
+use Guzzle_Http\Utils;
 /**
  * Persists non-session cookies using a JSON formatted file
  */
-class FileCookieJar extends CookieJar
+class File_Cookie_Jar extends Cookie_Jar
 {
     /**
      * @var string filename
      */
     private $filename;
-
     /**
      * @var bool Control whether to persist session cookies or not.
      */
-    private $storeSessionCookies;
-
+    private $store_session_cookies;
     /**
      * Create a new FileCookieJar object
      *
@@ -30,17 +26,15 @@ class FileCookieJar extends CookieJar
      *
      * @throws \RuntimeException if the file cannot be found or created
      */
-    public function __construct(string $cookieFile, bool $storeSessionCookies = false)
+    public function __construct(string $cookie_file, bool $store_session_cookies = false)
     {
         parent::__construct();
-        $this->filename = $cookieFile;
-        $this->storeSessionCookies = $storeSessionCookies;
-
-        if (\file_exists($cookieFile)) {
-            $this->load($cookieFile);
+        $this->filename = $cookie_file;
+        $this->store_session_cookies = $store_session_cookies;
+        if (\file_exists($cookie_file)) {
+            $this->load($cookie_file);
         }
     }
-
     /**
      * Saves the file when shutting down
      */
@@ -48,7 +42,6 @@ class FileCookieJar extends CookieJar
     {
         $this->save($this->filename);
     }
-
     /**
      * Saves the cookies to a file.
      *
@@ -61,17 +54,15 @@ class FileCookieJar extends CookieJar
         $json = [];
         /** @var SetCookie $cookie */
         foreach ($this as $cookie) {
-            if (CookieJar::shouldPersist($cookie, $this->storeSessionCookies)) {
-                $json[] = $cookie->toArray();
+            if (Cookie_Jar::should_persist($cookie, $this->store_session_cookies)) {
+                $json[] = $cookie->to_array();
             }
         }
-
-        $jsonStr = Utils::jsonEncode($json);
-        if (false === \file_put_contents($filename, $jsonStr, \LOCK_EX)) {
+        $json_str = Utils::json_encode($json);
+        if (false === \file_put_contents($filename, $json_str, \LOCK_EX)) {
             throw new \RuntimeException("Unable to save file {$filename}");
         }
     }
-
     /**
      * Load cookies from a JSON formatted file.
      *
@@ -90,11 +81,10 @@ class FileCookieJar extends CookieJar
         if ($json === '') {
             return;
         }
-
-        $data = Utils::jsonDecode($json, true);
+        $data = Utils::json_decode($json, true);
         if (\is_array($data)) {
             foreach ($data as $cookie) {
-                $this->setCookie(new SetCookie($cookie));
+                $this->set_cookie(new Set_Cookie($cookie));
             }
         } elseif (\is_scalar($data) && !empty($data)) {
             throw new \RuntimeException("Invalid cookie file: {$filename}");
